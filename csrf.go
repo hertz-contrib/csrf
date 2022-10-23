@@ -29,8 +29,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"io"
 	"math/rand"
+	"net/textproto"
 	"strings"
 	"time"
 
@@ -39,8 +41,27 @@ import (
 )
 
 // New validates CSRF token.
-func New(config ...Config) app.HandlerFunc {
-	cfg := configDefault(config...)
+func New(opts ...Option) app.HandlerFunc {
+	cfg := NewOptions(opts...)
+	selectors := strings.Split(cfg.KeyLookup, ":")
+
+	if len(selectors) != 2 {
+		panic(errors.New("[CSRF] KeyLookup must in the form of <source>:<key>"))
+	}
+
+	if cfg.Extractor == nil {
+		// By default, we extract from a header
+		cfg.Extractor = CsrfFromHeader(textproto.CanonicalMIMEHeaderKey(selectors[1]))
+
+		switch selectors[0] {
+		case "form":
+			cfg.Extractor = CsrfFromForm(selectors[1])
+		case "query":
+			cfg.Extractor = CsrfFromQuery(selectors[1])
+		case "param":
+			cfg.Extractor = CsrfFromParam(selectors[1])
+		}
+	}
 
 	return func(ctx context.Context, c *app.RequestContext) {
 		// Don't execute middleware if Next returns true

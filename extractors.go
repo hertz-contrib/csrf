@@ -39,8 +39,8 @@ var (
 	errMissingForm   = errors.New("[CSRF] missing csrf token in form")
 )
 
-// FromParam returns a function that extracts token from the url param string.
-func FromParam(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
+// CsrfFromParam returns a function that extracts token from the url param string.
+func CsrfFromParam(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
 	return func(ctx context.Context, c *app.RequestContext) (string, error) {
 		token := c.Param(param)
 		if token == "" {
@@ -50,8 +50,8 @@ func FromParam(param string) func(ctx context.Context, c *app.RequestContext) (s
 	}
 }
 
-// FromForm returns a function that extracts a token from a multipart-form.
-func FromForm(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
+// CsrfFromForm returns a function that extracts a token from a multipart-form.
+func CsrfFromForm(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
 	return func(ctx context.Context, c *app.RequestContext) (string, error) {
 		token := c.FormValue(param)
 		if string(token) == "" {
@@ -61,8 +61,8 @@ func FromForm(param string) func(ctx context.Context, c *app.RequestContext) (st
 	}
 }
 
-// FromHeader returns a function that extracts token from the request header.
-func FromHeader(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
+// CsrfFromHeader returns a function that extracts token from the request header.
+func CsrfFromHeader(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
 	return func(ctx context.Context, c *app.RequestContext) (string, error) {
 		token := c.GetHeader(param)
 		if string(token) == "" {
@@ -72,8 +72,8 @@ func FromHeader(param string) func(ctx context.Context, c *app.RequestContext) (
 	}
 }
 
-// FromQuery returns a function that extracts token from the query string.
-func FromQuery(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
+// CsrfFromQuery returns a function that extracts token from the query string.
+func CsrfFromQuery(param string) func(ctx context.Context, c *app.RequestContext) (string, error) {
 	return func(ctx context.Context, c *app.RequestContext) (string, error) {
 		token := c.Query(param)
 		if token == "" {

@@ -27,17 +27,20 @@ package csrf
 
 import (
 	"context"
-	"errors"
-	"net/textproto"
-	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
+// Option is the only struct that can be used to set Options.
+type Option struct {
+	F func(o *Options)
+}
+
 const (
-	csrfSecret = "csrfSecret"
-	csrfSalt   = "csrfSalt"
-	csrfToken  = "csrfToken"
+	csrfSecret     = "csrfSecret"
+	csrfSalt       = "csrfSalt"
+	csrfToken      = "csrfToken"
+	csrfHeaderName = "X-CSRF-TOKEN"
 
 	letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	// 6 bits to represent a letter index
@@ -47,14 +50,18 @@ const (
 	letterIdMax  = 63 / letterIdBits
 )
 
-// Config defines the config for middleware.
-type Config struct {
+type CsrfNextHandler func(ctx context.Context, c *app.RequestContext) bool
+
+type CsrfExtractorHandler func(ctx context.Context, c *app.RequestContext) (string, error)
+
+// Options defines the config for middleware.
+type Options struct {
 	// Secret used to generate token.
 	//
-	// Default: secret
+	// Default: csrfSecret
 	Secret string
 
-	// IgnoreMethods skip csrf middleware.
+	// Ignored methods will be considered no protection required.
 	//
 	// Optional. Default: "GET", "HEAD", "OPTIONS", "TRACE"
 	IgnoreMethods []string
@@ -62,7 +69,7 @@ type Config struct {
 	// Next defines a function to skip this middleware when returned true.
 	//
 	// Optional. Default: nil
-	Next func(ctx context.Context, c *app.RequestContext) bool
+	Next CsrfNextHandler
 
 	// KeyLookup is a string in the form of "<source>:<key>" that is used
 	// to create an Extractor that extracts the token from the request.
@@ -75,9 +82,9 @@ type Config struct {
 	// Optional. Default: "header:X-CSRF-TOKEN"
 	KeyLookup string
 
-	// ErrorHandler is executed when an error is returned from app.HandlerFunc.
+	// ErrorFunc is executed when an error is returned from app.HandlerFunc.
 	//
-	// Optional. Default: func(ctx context.Context, c *app.RequestContext) {panic(c.Errors.Last())}
+	// Optional. Default: func(ctx context.Context, c *app.RequestContext) { panic(c.Errors.Last()) }
 	ErrorFunc app.HandlerFunc
 
 	// Extractor returns the csrf token.
@@ -85,69 +92,81 @@ type Config struct {
 	// If set this will be used in place of an Extractor based on KeyLookup.
 	//
 	// Optional. Default will create an Extractor based on KeyLookup.
-	Extractor func(ctx context.Context, c *app.RequestContext) (string, error)
+	Extractor CsrfExtractorHandler
 }
 
-const HeaderName = "X-CSRF-TOKEN"
+func (o *Options) Apply(opts []Option) {
+	for _, op := range opts {
+		op.F(o)
+	}
+}
 
-// ConfigDefault is the default config.
-var ConfigDefault = Config{
-	Secret: "secret",
+// OptionsDefault is the default options.
+var OptionsDefault = Options{
+	Secret: csrfSecret,
 	// Assume that anything not defined as 'safe' by RFC7231 needs protection
 	IgnoreMethods: []string{"GET", "HEAD", "OPTIONS", "TRACE"},
 	Next:          nil,
-	KeyLookup:     "header:" + HeaderName,
-	Extractor:     FromHeader(HeaderName),
+	KeyLookup:     "header:" + csrfHeaderName,
+	ErrorFunc:     func(ctx context.Context, c *app.RequestContext) { panic(c.Errors.Last()) },
 }
 
-func configDefault(config ...Config) Config {
-	// Return default config if nothing provided
-	if len(config) < 1 {
-		return ConfigDefault
+func NewOptions(opts ...Option) *Options {
+	options := &Options{
+		Secret:        OptionsDefault.Secret,
+		IgnoreMethods: OptionsDefault.IgnoreMethods,
+		Next:          OptionsDefault.Next,
+		KeyLookup:     OptionsDefault.KeyLookup,
+		ErrorFunc:     OptionsDefault.ErrorFunc,
 	}
+	options.Apply(opts)
+	return options
+}
 
-	// Override default config
-	cfg := config[0]
+func WithSecret(secret string) Option {
+	return Option{
+		F: func(o *Options) {
+			o.Secret = secret
+		},
+	}
+}
 
-	// Set default values
-	if cfg.Secret == "" {
-		cfg.Secret = ConfigDefault.Secret
+func WithIgnoredMethods(methods []string) Option {
+	return Option{
+		F: func(o *Options) {
+			o.IgnoreMethods = methods
+		},
 	}
-	if cfg.IgnoreMethods == nil {
-		cfg.IgnoreMethods = ConfigDefault.IgnoreMethods
-	}
-	if cfg.Next == nil {
-		cfg.Next = ConfigDefault.Next
-	}
-	if cfg.KeyLookup == "" {
-		cfg.KeyLookup = ConfigDefault.KeyLookup
-	}
-	if cfg.ErrorFunc == nil {
-		cfg.ErrorFunc = func(ctx context.Context, c *app.RequestContext) {
-			panic(c.Errors.Last())
-		}
-	}
+}
 
-	// Generate the correct extractor to get the token from the correct location
-	selectors := strings.Split(cfg.KeyLookup, ":")
-
-	if len(selectors) != 2 {
-		panic(errors.New("[CSRF] KeyLookup must in the form of <source>:<key>"))
+func WithNext(f CsrfNextHandler) Option {
+	return Option{
+		F: func(o *Options) {
+			o.Next = f
+		},
 	}
+}
 
-	if cfg.Extractor == nil {
-		// By default, we extract from a header
-		cfg.Extractor = FromHeader(textproto.CanonicalMIMEHeaderKey(selectors[1]))
-
-		switch selectors[0] {
-		case "form":
-			cfg.Extractor = FromForm(selectors[1])
-		case "query":
-			cfg.Extractor = FromQuery(selectors[1])
-		case "param":
-			cfg.Extractor = FromParam(selectors[1])
-		}
+func WithKeyLookUp(lookup string) Option {
+	return Option{
+		F: func(o *Options) {
+			o.KeyLookup = lookup
+		},
 	}
+}
 
-	return cfg
+func WithErrorFunc(f app.HandlerFunc) Option {
+	return Option{
+		F: func(o *Options) {
+			o.ErrorFunc = f
+		},
+	}
+}
+
+func WithExtractor(f CsrfExtractorHandler) Option {
+	return Option{
+		F: func(o *Options) {
+			o.Extractor = f
+		},
+	}
 }

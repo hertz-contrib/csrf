@@ -40,21 +40,31 @@ import (
 	"github.com/hertz-contrib/sessions/cookie"
 )
 
-func newTestEngine(config Config) *route.Engine {
+func newTestEngine(opts ...Option) *route.Engine {
 	h := server.Default()
 	store := cookie.NewStore([]byte("secret123"))
 	h.Use(sessions.Sessions("my_session", store))
-	h.Use(New(config))
+	h.Use(New(opts...))
 
 	return h.Engine
 }
 
+func TestDefaultOptions(t *testing.T) {
+	opt := NewOptions()
+	assert.DeepEqual(t, opt.Secret, csrfSecret)
+	assert.DeepEqual(t, opt.IgnoreMethods, []string{"GET", "HEAD", "OPTIONS", "TRACE"})
+	assert.DeepEqual(t, opt.KeyLookup, "header:"+csrfHeaderName)
+
+	opt1 := NewOptions(WithSecret("secret123"),
+		WithIgnoredMethods([]string{"GET", "HEAD", "OPTIONS"}))
+	assert.DeepEqual(t, opt1.Secret, "secret123")
+	assert.DeepEqual(t, opt1.IgnoreMethods, []string{"GET", "HEAD", "OPTIONS"})
+	assert.DeepEqual(t, opt.KeyLookup, "header:"+csrfHeaderName)
+}
+
 func TestParam(t *testing.T) {
 	var token string
-	router := newTestEngine(Config{
-		Secret:    "secret123",
-		KeyLookup: "param:csrf",
-	})
+	router := newTestEngine(WithKeyLookUp("param:csrf"))
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
 		token = GetToken(c)
@@ -94,9 +104,7 @@ func TestParam(t *testing.T) {
 
 func TestForm(t *testing.T) {
 	var token string
-	router := newTestEngine(Config{
-		KeyLookup: "form:_csrf",
-	})
+	router := newTestEngine(WithKeyLookUp("form:_csrf"))
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
 		token = GetToken(c)
@@ -142,9 +150,7 @@ func TestForm(t *testing.T) {
 
 func TestQueryHeader(t *testing.T) {
 	var token string
-	router := newTestEngine(Config{
-		KeyLookup: "header:X-XSRF-TOKEN",
-	})
+	router := newTestEngine(WithKeyLookUp("header:X-XSRF-TOKEN"))
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
 		token = GetToken(c)
@@ -190,9 +196,7 @@ func TestQueryHeader(t *testing.T) {
 
 func TestQueryString(t *testing.T) {
 	var token string
-	router := newTestEngine(Config{
-		KeyLookup: "query:_csrf",
-	})
+	router := newTestEngine(WithKeyLookUp("query:_csrf"))
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
 		token = GetToken(c)
@@ -239,9 +243,7 @@ func TestDefaultAndWrongKeyLookup(t *testing.T) {
 	router := h.Engine
 
 	assert.Panic(t, func() {
-		newTestEngine(Config{
-			KeyLookup: "header",
-		})
+		newTestEngine(WithKeyLookUp("herder"))
 	})
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
@@ -275,11 +277,9 @@ func TestDefaultAndWrongKeyLookup(t *testing.T) {
 
 func TestErrorFunc(t *testing.T) {
 	result := ""
-	router := newTestEngine(Config{
-		ErrorFunc: func(c context.Context, ctx *app.RequestContext) {
-			result = "something wrong"
-		},
-	})
+	router := newTestEngine(WithErrorFunc(func(c context.Context, ctx *app.RequestContext) {
+		result = "something wrong"
+	}))
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
 		GetToken(c)
@@ -307,9 +307,7 @@ func TestErrorFunc(t *testing.T) {
 }
 
 func TestIgnoreMethods(t *testing.T) {
-	router := newTestEngine(Config{
-		IgnoreMethods: []string{"GET", "POST"},
-	})
+	router := newTestEngine(WithIgnoredMethods([]string{"GET", "POST"}))
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
 		GetToken(c)
@@ -346,11 +344,9 @@ func TestIgnoreMethods(t *testing.T) {
 }
 
 func TestNext(t *testing.T) {
-	router := newTestEngine(Config{
-		Next: func(ctx context.Context, c *app.RequestContext) bool {
-			return true
-		},
-	})
+	router := newTestEngine(WithNext(func(ctx context.Context, c *app.RequestContext) bool {
+		return true
+	}))
 
 	router.POST("/login", func(ctx context.Context, c *app.RequestContext) {
 		c.String(http.StatusOK, "OK")
@@ -367,12 +363,10 @@ func TestNext(t *testing.T) {
 
 func TestExtractor(t *testing.T) {
 	var token string
-	router := newTestEngine(Config{
-		Secret: "secret123",
-		Extractor: func(c context.Context, ctx *app.RequestContext) (string, error) {
+	router := newTestEngine(WithSecret("secret123"),
+		WithExtractor(func(c context.Context, ctx *app.RequestContext) (string, error) {
 			return string(ctx.FormValue("token getter")), nil
-		},
-	})
+		}))
 
 	router.GET("/login", func(ctx context.Context, c *app.RequestContext) {
 		token = GetToken(c)
