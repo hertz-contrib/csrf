@@ -2,7 +2,7 @@
 
 CSRF for hertz.
 
-This repo borrows the structural design of `fiber-csrf`.
+This repo borrows the structural design of [fiber-csrf](https://github.com/gofiber/fiber/tree/master/middleware/csrf) and adapted to Hertz.
 
 ## Install
 
