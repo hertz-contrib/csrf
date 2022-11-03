@@ -1,6 +1,8 @@
 # CSRF (This is a community driven project)
 
-CSRF for hertz
+CSRF for hertz.
+
+This repo borrows the structural design of `fiber-csrf`.
 
 ## Install
 
