@@ -1,8 +1,12 @@
 # CSRF (This is a community driven project)
 
-CSRF for hertz.
+Cross-site request forgery (also known as CSRF) is a web security vulnerability that allows an attacker to induce users to perform actions that they do not intend to perform. It allows an attacker to partly circumvent the same origin policy, which is designed to prevent different websites from interfering with each other.
+
+The CSRF middleware helps you prevent Cross-Site Request Forgery attacks.
 
 This repo borrows the structural design of [fiber-csrf](https://github.com/gofiber/fiber/tree/master/middleware/csrf) and adapted to Hertz.
+
+
 
 ## Install
 

@@ -123,6 +123,7 @@ func NewOptions(opts ...Option) *Options {
 	return options
 }
 
+// WithSecret sets secret.
 func WithSecret(secret string) Option {
 	return Option{
 		F: func(o *Options) {
@@ -131,6 +132,7 @@ func WithSecret(secret string) Option {
 	}
 }
 
+// WithIgnoredMethods sets methods that do not need to be protected.
 func WithIgnoredMethods(methods []string) Option {
 	return Option{
 		F: func(o *Options) {
@@ -139,6 +141,7 @@ func WithIgnoredMethods(methods []string) Option {
 	}
 }
 
+// WithNext sets whether to skip this middleware.
 func WithNext(f CsrfNextHandler) Option {
 	return Option{
 		F: func(o *Options) {
@@ -147,6 +150,8 @@ func WithNext(f CsrfNextHandler) Option {
 	}
 }
 
+// WithKeyLookUp sets a string in the form of "<source>:<key>" that is used
+// to create an Extractor that extracts the token from the request.
 func WithKeyLookUp(lookup string) Option {
 	return Option{
 		F: func(o *Options) {
@@ -155,6 +160,7 @@ func WithKeyLookUp(lookup string) Option {
 	}
 }
 
+// WithErrorFunc sets ErrorFunc.
 func WithErrorFunc(f app.HandlerFunc) Option {
 	return Option{
 		F: func(o *Options) {
@@ -163,6 +169,7 @@ func WithErrorFunc(f app.HandlerFunc) Option {
 	}
 }
 
+// WithExtractor sets extractor.
 func WithExtractor(f CsrfExtractorHandler) Option {
 	return Option{
 		F: func(o *Options) {
