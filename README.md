@@ -40,13 +40,13 @@ func main() {
 
 	store := cookie.NewStore([]byte("secret"))
 	h.Use(sessions.Sessions("session", store))
-	h.Use(csrf.New(csrf.Options{
-		Secret: "secret123",
-		ErrorFunc: func(c context.Context, ctx *app.RequestContext) {
+	h.Use(csrf.New(
+		csrf.WithSecret("secret123"),
+		csrf.WithErrorFunc(func(c context.Context, ctx *app.RequestContext) {
 			ctx.String(400, ctx.Errors.Last().Error())
 			ctx.Abort()
 		},
-	}))
+		)))
 
 	h.GET("/protected", func(c context.Context, ctx *app.RequestContext) {
 		ctx.String(200, csrf.GetToken(ctx))
