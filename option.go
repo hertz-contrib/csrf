@@ -27,6 +27,7 @@ package csrf
 
 import (
 	"context"
+	"errors"
 
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -48,6 +49,15 @@ const (
 	// All 1-bits as many as letterIdBits
 	letterIdMask = 1<<letterIdBits - 1
 	letterIdMax  = 63 / letterIdBits
+)
+
+var (
+	errMissingHeader = errors.New("[CSRF] missing csrf token in header")
+	errMissingQuery  = errors.New("[CSRF] missing csrf token in query")
+	errMissingParam  = errors.New("[CSRF] missing csrf token in param")
+	errMissingForm   = errors.New("[CSRF] missing csrf token in form")
+	errMissingSalt   = errors.New("[CSRF] missing salt")
+	errInvalidToken  = errors.New("[CSRF] invalid token")
 )
 
 type CsrfNextHandler func(ctx context.Context, c *app.RequestContext) bool

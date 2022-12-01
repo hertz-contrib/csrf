@@ -27,16 +27,8 @@ package csrf
 
 import (
 	"context"
-	"errors"
 
 	"github.com/cloudwego/hertz/pkg/app"
-)
-
-var (
-	errMissingHeader = errors.New("[CSRF] missing csrf token in header")
-	errMissingQuery  = errors.New("[CSRF] missing csrf token in query")
-	errMissingParam  = errors.New("[CSRF] missing csrf token in param")
-	errMissingForm   = errors.New("[CSRF] missing csrf token in form")
 )
 
 // CsrfFromParam returns a function that extracts token from the url param string.
