@@ -39,8 +39,8 @@ github.com/henrylee2cn/ameda v1.4.10 h1:JdvI2Ekq7tapdPsuhrc4CaFiqw6QXFvZIULWJgQy
 github.com/henrylee2cn/ameda v1.4.10/go.mod h1:liZulR8DgHxdK+MEwvZIylGnmcjzQ6N6f2PlWe7nEO4=
 github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8 h1:yE9ULgp02BhYIrO6sdV/FPe0xQM6fNHkVQW2IAymfM0=
 github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8/go.mod h1:Nhe/DM3671a5udlv2AdV2ni/MZzgfv2qrPL5nIi3EGQ=
-github.com/hertz-contrib/sessions v1.0.0 h1:EJqbvSWGE2I9wBKXXNQqbWJ2/62NehJZJfrfuEnribU=
-github.com/hertz-contrib/sessions v1.0.0/go.mod h1:gyVq7zq5emvSTLpp4VrlLOXjnajorYZ1hH4ZSX9Afb0=
+github.com/hertz-contrib/sessions v1.0.1 h1:2puqvNqzyuPC3+5gzMRS+xhvGdNq3Ux7OVEewLSJbAk=
+github.com/hertz-contrib/sessions v1.0.1/go.mod h1:gyVq7zq5emvSTLpp4VrlLOXjnajorYZ1hH4ZSX9Afb0=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/klauspost/cpuid/v2 v2.0.9 h1:lgaqFMSdTdQYdZ04uHyN2d/eKdOMyi2YLSvlQIBFYa4=
 github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=

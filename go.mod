@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/cloudwego/hertz v0.4.1
-	github.com/hertz-contrib/sessions v1.0.0
+	github.com/hertz-contrib/sessions v1.0.1
 )
 
 require (
