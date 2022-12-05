@@ -43,7 +43,7 @@ import (
 func newTestEngine(opts ...Option) *route.Engine {
 	h := server.Default()
 	store := cookie.NewStore([]byte("secret123"))
-	h.Use(sessions.Sessions("my_session", store))
+	h.Use(sessions.New("my_session", store))
 	h.Use(New(opts...))
 
 	return h.Engine
@@ -238,7 +238,7 @@ func TestDefaultAndWrongKeyLookup(t *testing.T) {
 	var token string
 	h := server.Default()
 	store := cookie.NewStore([]byte("secret123"))
-	h.Use(sessions.Sessions("my_session", store))
+	h.Use(sessions.New("my_session", store))
 	h.Use(New())
 	router := h.Engine
 

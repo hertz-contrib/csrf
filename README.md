@@ -39,7 +39,7 @@ func main() {
 	h := server.Default()
 
 	store := cookie.NewStore([]byte("secret"))
-	h.Use(sessions.Sessions("session", store))
+	h.Use(sessions.New("session", store))
 	h.Use(csrf.New(
 		csrf.WithSecret("secret123"),
 		csrf.WithErrorFunc(func(c context.Context, ctx *app.RequestContext) {
