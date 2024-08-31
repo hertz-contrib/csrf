@@ -52,12 +52,14 @@ const (
 )
 
 var (
+	ErrMissingCookie = errors.New("[CSRF] missing csrf token in cookie")
 	errMissingHeader = errors.New("[CSRF] missing csrf token in header")
 	errMissingQuery  = errors.New("[CSRF] missing csrf token in query")
 	errMissingParam  = errors.New("[CSRF] missing csrf token in param")
 	errMissingForm   = errors.New("[CSRF] missing csrf token in form")
 	errMissingSalt   = errors.New("[CSRF] missing salt")
 	errInvalidToken  = errors.New("[CSRF] invalid token")
+	errBadReferer    = errors.New("[CSRF] invalid referer")
 )
 
 type CsrfNextHandler func(ctx context.Context, c *app.RequestContext) bool
@@ -103,6 +105,12 @@ type Options struct {
 	//
 	// Optional. Default will create an Extractor based on KeyLookup.
 	Extractor CsrfExtractorHandler
+
+	// Optional. Default: []
+	TrustedOrigins []string
+
+	// Optional. Default: false
+	checkTrustedOrigins bool
 }
 
 func (o *Options) Apply(opts []Option) {
@@ -123,11 +131,13 @@ var OptionsDefault = Options{
 
 func NewOptions(opts ...Option) *Options {
 	options := &Options{
-		Secret:        OptionsDefault.Secret,
-		IgnoreMethods: OptionsDefault.IgnoreMethods,
-		Next:          OptionsDefault.Next,
-		KeyLookup:     OptionsDefault.KeyLookup,
-		ErrorFunc:     OptionsDefault.ErrorFunc,
+		Secret:              OptionsDefault.Secret,
+		IgnoreMethods:       OptionsDefault.IgnoreMethods,
+		Next:                OptionsDefault.Next,
+		KeyLookup:           OptionsDefault.KeyLookup,
+		ErrorFunc:           OptionsDefault.ErrorFunc,
+		TrustedOrigins:      []string{},
+		checkTrustedOrigins: false,
 	}
 	options.Apply(opts)
 	return options
@@ -179,11 +189,29 @@ func WithErrorFunc(f app.HandlerFunc) Option {
 	}
 }
 
-// WithExtractor sets extractor.
+// WithExtractor sets Extractor.
 func WithExtractor(f CsrfExtractorHandler) Option {
 	return Option{
 		F: func(o *Options) {
 			o.Extractor = f
+		},
+	}
+}
+
+// WithTrustedOrigins sets TrustedOrigins
+func WithTrustedOrigins(t []string) Option {
+	return Option{
+		F: func(o *Options) {
+			o.TrustedOrigins = t
+		},
+	}
+}
+
+// WithCheckTrustedOrigins sets checkTrustedOrigins
+func WithCheckTrustedOrigins() Option {
+	return Option{
+		F: func(o *Options) {
+			o.checkTrustedOrigins = true
 		},
 	}
 }

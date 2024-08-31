@@ -33,6 +33,7 @@ import (
 	"io"
 	"math/rand"
 	"net/textproto"
+	"net/url"
 	"strings"
 	"time"
 
@@ -92,12 +93,19 @@ func New(opts ...Option) app.HandlerFunc {
 			return
 		}
 
+		if cfg.checkTrustedOrigins {
+			if !matchTrustedOrigins(c, cfg.TrustedOrigins) {
+				c.Error(errBadReferer)
+				cfg.ErrorFunc(ctx, c)
+				return
+			}
+		}
+
 		if tokenize(cfg.Secret, salt) != token {
 			c.Error(errInvalidToken)
 			cfg.ErrorFunc(ctx, c)
 			return
 		}
-
 		c.Next(ctx)
 	}
 }
@@ -165,4 +173,17 @@ func randStr(n int) string {
 		remain--
 	}
 	return sb.String()
+}
+
+func matchTrustedOrigins(c *app.RequestContext, trustedOrigins []string) bool {
+	match := false
+	if referer, err := url.Parse(string(c.GetHeader("Referer"))); err == nil && referer.String() != "" {
+		for _, trustedOrigin := range trustedOrigins {
+			if referer.Scheme+"://"+referer.Host == trustedOrigin {
+				match = true
+				break
+			}
+		}
+	}
+	return match
 }
